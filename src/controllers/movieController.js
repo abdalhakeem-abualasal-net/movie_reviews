@@ -33,7 +33,7 @@ const getMovieById = (req, res) => {
 
             const formattedRating = ratingsResults.length > 0 ?
                 (ratingsResults.reduce((sum, rating) => sum + rating.rating, 0) / ratingsResults.length).toFixed(1)
-                : 'No ratings';
+                : '0';
             
             const ratingCount = ratingsResults.length;
 

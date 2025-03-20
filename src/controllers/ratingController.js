@@ -63,14 +63,10 @@ const addRatingMovies = (req, res) => {
                         console.error("Database error while updating rating:", err);
                         return res.status(500).json({ error: "An error occurred while updating the rating" });
                     }
-                    return res.status(200).json({ message: "Rating updated successfully", updateResult });
-                });
-            } else {
-                db.query(insertQuery, [user_id, movie_id, rating], (err, insertResult) => {
-                    if (err) {
-                        console.error("Database error while adding rating:", err);
-                        return res.status(500).json({ error: "An error occurred while adding the rating" });
-                    }
+
+                    const countQuery = `
+                        SELECT COUNT(*) AS ratingCount, AVG(rating) AS avgRating FROM ratings WHERE movie_id = ?;
+                    `;
 
                     db.query(countQuery, [movie_id], (err, countResult) => {
                         if (err) {
@@ -79,14 +75,44 @@ const addRatingMovies = (req, res) => {
                         }
 
                         const updatedCount = countResult[0].ratingCount;
+                        const avgRating = countResult[0].avgRating;
 
-                        return res.status(200).json({
-                            message: "Rating added successfully",
-                            ratingCount: updatedCount
+                        res.json({
+                            message: "Rating added/updated successfully",
+                            ratingCount: updatedCount,
+                            avgRating: avgRating.toFixed(1)  
+                        });
+                    });
+                });
+            } else {
+                db.query(insertQuery, [user_id, movie_id, rating], (err, insertResult) => {
+                    if (err) {
+                        console.error("Database error while adding rating:", err);
+                        return res.status(500).json({ error: "An error occurred while adding the rating" });
+                    }
+
+                    const countQuery = `
+                        SELECT COUNT(*) AS ratingCount, AVG(rating) AS avgRating FROM ratings WHERE movie_id = ?;
+                    `;
+
+                    db.query(countQuery, [movie_id], (err, countResult) => {
+                        if (err) {
+                            console.error("Error fetching updated rating count:", err);
+                            return res.status(500).json({ error: "An error occurred while fetching the updated rating count" });
+                        }
+
+                        const updatedCount = countResult[0].ratingCount;
+                        const avgRating = countResult[0].avgRating;
+
+                        res.json({
+                            message: "Rating added/updated successfully",
+                            ratingCount: updatedCount,
+                            avgRating: avgRating.toFixed(1) 
                         });
                     });
                 });
             }
+
         });
     });
 };

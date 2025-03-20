@@ -58,9 +58,8 @@ const loginUser = (req, res) => {
                 return res.status(400).render('login', { message: 'بيانات تسجيل الدخول غير صحيحة' });
             }
 
-            // إنشاء session_token وتخزينه في قاعدة البيانات
             const sessionToken = crypto.randomBytes(32).toString('hex');
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 ساعة
+            const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000);
 
             const insertSessionQuery = 'INSERT INTO sessions (user_id, session_token, created_at, expires_at) VALUES (?, ?, ?, ?)';
             db.query(insertSessionQuery, [user.id, sessionToken, new Date(), expiresAt], (err, result) => {
@@ -68,7 +67,6 @@ const loginUser = (req, res) => {
                     return res.status(500).render('login', { message: 'حدث خطأ أثناء حفظ الجلسة' });
                 }
 
-                // إنشاء JWT
                 const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
                     expiresIn: '30d',
                 });
@@ -80,7 +78,6 @@ const loginUser = (req, res) => {
                     maxAge: 3600000
                 });
 
-                // نجاح تسجيل الدخول، الانتقال إلى الصفحة الرئيسية
                 res.redirect('/');
             });
         });

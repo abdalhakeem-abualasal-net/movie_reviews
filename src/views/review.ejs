@@ -40,7 +40,7 @@
                             <div class="flex items-center gap-2 text-yellow-400">
                                 <i class="fa-solid fa-star text-3xl"></i>
                                 <p class="text-xl font-semibold font-serif">
-                                    <span>
+                                    <span id="avg-rating">
                                         <%= formattedRating %>
                                     </span> / 5.0
                                 </p>
@@ -59,22 +59,25 @@
                                     <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="4"></i>
                                     <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="5"></i>
                                 </div>
-        <p id="my-rating">
-            <% let foundRating = false; %>
-            <% if (user) { %> <!-- تحقق من وجود user -->
-                <% ratings.forEach(function(rating) { %>
-                    <% if (rating.user_id === user.user_id) { %>
-                        <% foundRating = true; %>
-                        <p class="text-2xl" id="user-rating"><%= rating.rating %></p>
-                    <% } %>
-                <% }) %>
-            <% } %>
+                                <div id="my-rating">
+                                    <% if (user) { %> 
+                                        <% let userRated = false; %>
+                                        <% ratings.forEach(function(rating) { %>
+                                            <% if (rating.user_id === user.user_id) { %>
+                                                <p class="text-2xl" id="user-rating">
+                                                    <%= rating.rating %>
+                                                </p>
+                                                <% userRated = true; %>
+                                            <% } %>
+                                        <% }); %>
 
-            <% if (!foundRating) { %>
-                <p class="text-gray-500 text-2xl">لا يوجد تقييم</p>
-            <% } %>
-        </p>
-
+                                        <% if (!userRated) { %>
+                                            <p class="text-2xl" id="user-rating">0</p>
+                                        <% } %>
+                                    <% } else { %>
+                                        <p class="text-2xl" id="user-rating">0</p>
+                                    <% } %>
+                                </div>
                             </div>
 
                             <div>
@@ -181,9 +184,13 @@
         stars.forEach(star => {
             star.addEventListener('click', async (event) => {
                 if (!userId) {
-                    alert('You need to be logged in to rate this movie!');
+                    if (confirm('You need to be logged in to rate this movie! Do you want to log in now?')) {
+                        window.location.href = '/login';
+                    }
                     return;
                 }
+
+
 
                 const rating = event.target.getAttribute('data-rating');
 
@@ -210,12 +217,13 @@
                     throw new Error(result.error || "Failed to submit rating.");
                 }
                 
-                if(result.ratingCount){
+                if(result.ratingCount) {
+                    const updatedAvgRating = result.avgRating;
                     const updatedRatingCount = result.ratingCount;
                     document.getElementById('count-rating').textContent = updatedRatingCount;
-                    document.getElementById('my-rating').innerText = 7;
+                    document.getElementById('my-rating').innerText = rating;
+                    document.getElementById('avg-rating').textContent = updatedAvgRating;
                 }
-                
 
                 console.log("Rating submitted successfully:", result.message);
             } catch (error) {
@@ -223,6 +231,7 @@
                 alert('Error submitting rating');
             }
         };
+
 
 
         const updateStarColors = (rating) => {
