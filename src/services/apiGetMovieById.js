@@ -2,16 +2,10 @@ const db = require('../config/db');
 
 const getMovieById = (req, res) => {
     const movieId = req.params.id;
-    const sessionToken = req.cookies.session_token;
 
     const movieQuery = `SELECT * FROM movies WHERE id = ?`;
     const ratingsQuery = `SELECT * FROM ratings WHERE movie_id = ?`;
-    const commentsQuery = `
-        SELECT comments.*, users.name AS user_name
-        FROM comments
-        JOIN users ON comments.user_id = users.id
-        WHERE comments.movie_id = ?;
-    `;
+    const commentsQuery = `SELECT * FROM comments WHERE movie_id = ?`;
 
     db.query(movieQuery, [movieId], (err, movieResults) => {
         if (err) {
@@ -23,7 +17,7 @@ const getMovieById = (req, res) => {
             return res.status(404).send("Movie not found");
         }
 
-        const movie = movieResults[0];  
+        const movie = movieResults[0];
 
         db.query(ratingsQuery, [movieId], (err, ratingsResults) => {
             if (err) {
@@ -33,8 +27,8 @@ const getMovieById = (req, res) => {
 
             const formattedRating = ratingsResults.length > 0 ?
                 (ratingsResults.reduce((sum, rating) => sum + rating.rating, 0) / ratingsResults.length).toFixed(1)
-                : 'No ratings';
-            
+                : 'No ratings available';
+
             const ratingCount = ratingsResults.length;
 
             db.query(commentsQuery, [movieId], (err, commentsResults) => {
@@ -45,14 +39,13 @@ const getMovieById = (req, res) => {
 
                 const commentCount = commentsResults.length;
 
-                res.render("review" ,{
+                res.json({
                     movie,
                     ratings: ratingsResults,
                     comments: commentsResults,
                     formattedRating,
                     ratingCount,
-                    commentCount,
-                    sessionToken
+                    commentCount
                 });
             });
         });

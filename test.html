@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Rating</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .star {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #d3d3d3;
+            /* اللون الرمادي للنجمات غير المحددة */
+        }
+
+        .star.selected {
+            color: #fbbf24;
+            /* اللون الأصفر للنجمات المحددة */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-5">
+
+    <!-- نموذج التقييم -->
+    <div class="max-w-md mx-auto bg-white p-5 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">تقييم الفيلم</h2>
+
+<form id="ratingForm">
+    <label for="ratingSlider">اختر التقييم:</label>
+    <input type="range" id="ratingSlider" name="rating" min="1" max="10" step="1" value="5">
+    <span id="sliderValue">5</span>
+
+    <input type="hidden" name="user_id" value="2">
+    <input type="hidden" name="movie_id" value="87">
+
+    <button type="submit">إرسال التقييم</button>
+</form>
+    </div>
+
+    <script>
+        const starsContainer = document.getElementById('stars');
+        const ratingValue = document.getElementById('ratingValue');
+
+        // إنشاء 10 نجمات في النموذج
+        for (let i = 1; i <= 10; i++) {
+            const star = document.createElement('span');
+            star.classList.add('star');
+            star.innerHTML = '★';  // علامة النجمة
+            star.dataset.value = i;
+
+            // إضافة الحدث عند اختيار النجمة
+            star.addEventListener('click', function () {
+                setRating(i);
+            });
+
+            starsContainer.appendChild(star);
+        }
+
+        // تعيين التقييم عندما يتم اختيار نجمة
+        function setRating(rating) {
+            ratingValue.value = rating;  // تحديث قيمة التقييم المخفية
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                if (star.dataset.value <= rating) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
+        }
+
+        // إرسال التقييم
+        document.getElementById('ratingForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const rating = ratingValue.value;
+
+            if (rating == "") {
+                alert("الرجاء اختيار التقييم");
+                return;
+            }
+
+            // إرسال التقييم إلى الخادم باستخدام fetch أو AJAX
+            fetch('/add-rating', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer your_session_token_here' // إرسال التوكن هنا إذا كان مطلوبًا
+                },
+                body: JSON.stringify({
+                    rating: rating,
+                    user_id: document.querySelector('[name="user_id"]').value,
+                    movie_id: document.querySelector('[name="movie_id"]').value
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("تم إضافة التقييم بنجاح!");
+                    } else {
+                        alert("حدث خطأ أثناء إضافة التقييم.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("حدث خطأ أثناء الاتصال بالخادم.");
+                });
+        });
+    </script>
+</body>
+
+</html>

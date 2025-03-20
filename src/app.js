@@ -1,43 +1,57 @@
+require('dotenv').config();
+
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const authRoutes = require("./routes/authRoutes"); // استيراد المسارات الخاصة بالتسجيل وتسجيل الدخول
-const path = require('path');  // استيراد مكتبة path
+const authRoutes = require("./routes/authRoutes"); 
+const movieRoutes = require("./routes/movieRoutes");
+const commentRoutes = require("./routes/commentRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
+const api = require('./routes/api');
+const path = require('path');  
+const sessionMiddleware = require('../src/middlewares/sessionMiddleware');
+const indexController = require("../src/controllers/indexController");
 
 const app = express();
 
-// إعداد مكتبة body-parser للتعامل مع البيانات المرسلة عبر الـ form
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());  // لإعداد استخدام الكوكيز
+app.use(cookieParser()); 
+app.use(sessionMiddleware);
 
-// إعداد EJS كـ view engine
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-// تحديد مجلد views بشكل صريح
-app.set('views', path.join(__dirname, 'views'));  // تأكد أن هذا المسار يتوافق مع المكان الفعلي للملفات
+app.set('views', path.join(__dirname, 'views')); 
 
-// مسارات الصفحات
-app.get("/", (req, res) => {
-    res.render("index");  // عرض الصفحة الرئيسية
-});
+app.get("/", indexController.getIndexData);
 
 app.get("/review", (req, res) => {
-    res.render("review");  // عرض الصفحة الرئيسية
+    res.render("review");  
 });
 
 app.get("/login", (req, res) => {
-    res.render("login");  // عرض صفحة تسجيل الدخول
+    res.render("login");  
 });
+
+app.get("/test", (req, res) => {
+    res.render("test");
+});
+
 
 app.get("/register", (req, res) => {
-    res.render("register");  // عرض صفحة إنشاء الحساب
+    res.render("register");  
 });
 
-// استخدام المسارات التي تم تعريفها في authRoutes
-app.use("/auth", authRoutes);  // كل المسارات المرتبطة بـ /auth
+app.get('/error', (req, res) => {
+    res.render("error") 
+});
+app.use('/api', api);
 
-// إعداد الخادم للاستماع على المنفذ
+app.use("/", authRoutes);
+app.use("/", movieRoutes);
+app.use("/", commentRoutes);
+app.use("/", ratingRoutes);
+
 const PORT = process.env.PORT || 3004;
 
 app.listen(PORT, () => {

@@ -1,39 +1,79 @@
-const User = require('../models/user'); // استيراد نموذج User
-const Comment = require('../models/comment'); // استيراد نموذج Comment
-const Movie = require('../models/movie'); // استيراد نموذج Movie
+const db = require('../config/db');
 
-// إضافة تعليق جديد
-const addComment = async (req, res) => {
-    try {
-        const { user_id, movie_id, comment } = req.body;
-        const newComment = await Comment.create({
-            user_id,
-            movie_id,
-            comment
-        });
-        res.status(201).json(newComment);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error adding comment', error });
+
+const addMovieComment = (req, res) => {
+    const { movieId, userId, comment } = req.body;
+
+    if (!movieId || !userId || !comment) {
+        return res.status(400).json({ error: 'All fields are required' });
     }
+
+    const query = `
+        INSERT INTO comments (movie_id, user_id, comment, created_at)
+        VALUES (?, ?, ?, NOW())
+    `;
+
+    db.query(query, [movieId, userId, comment], (err, results) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "An error occurred while adding the comment" });
+        }
+
+        const fetchUserQuery = `
+            SELECT users.name AS user_name FROM users WHERE users.id = ?
+        `;
+
+        db.query(fetchUserQuery, [userId], (err, userResults) => {
+            if (err) {
+                console.error("Database Error:", err);
+                return res.status(500).json({ error: "An error occurred while fetching user data" });
+            }
+
+            const userName = userResults.length > 0 ? userResults[0].user_name : 'Unknown';
+
+            res.status(201).json({
+                message: 'Comment added successfully',
+                comment: {
+                    id: results.insertId,
+                    movieId,
+                    userId,
+                    comment,
+                    user_name: userName
+                }
+            });
+        });
+    });
 };
 
-// الحصول على جميع تعليقات فيلم معين
-const getCommentsByMovie = async (req, res) => {
-    try {
-        const movieId = req.params.movieId;
-        const comments = await Comment.findAll({
-            where: { movie_id: movieId },
-            include: [User], // تشمل بيانات المستخدم (اختياري)
-        });
-        res.status(200).json(comments);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching comments', error });
-    }
+
+const getCommentsByMovie = (req, res) => {
+    const movieId = req.params.id;
+
+    const query = `
+        SELECT movies.*, ratings.rating, COUNT(ratings.id) AS rating_count
+        FROM movies
+        LEFT JOIN ratings ON movies.id = ratings.movie_id
+        WHERE movies.id = ?
+        GROUP BY movies.id
+    `;
+
+    db.query(query, [movieId], (err, results) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "An error occurred while fetching movie data" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Movie not found" });
+        }
+
+        const formattedRating = results[0].rating ? results[0].rating.toFixed(1) : 'No rating available';
+        const ratingCount = results[0].rating_count;
+
+        res.render("review", { movie: results[0], rating: formattedRating, ratingCount: ratingCount });
+    });
 };
 
-// حذف تعليق حسب ID
 const deleteComment = async (req, res) => {
     try {
         const commentId = req.params.id;
@@ -50,7 +90,7 @@ const deleteComment = async (req, res) => {
 };
 
 module.exports = {
-    addComment,
+    addMovieComment,
     getCommentsByMovie,
     deleteComment
 };

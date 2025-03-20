@@ -8,225 +8,329 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    
-<style>
-    @keyframes slideIn {
-        from {
-            transform: translateX(-100%);
-        }
-
-        to {
-            transform: translateX(0%);
-        }
-    }
-
-    @keyframes slideOut {
-        from {
-            transform: translateX(0%);
-        }
-
-        to {
-            transform: translateX(-100%);
-        }
-    }
-
-    .animate-slide-in {
-        animation: slideIn 0.7s ease-out forwards;
-    }
-
-    .animate-slide-out {
-        animation: slideOut 0.7s ease-out forwards;
-    }
-</style>
 </head>
 
 <body class="bg-gradient-to-b from-black to-gray-950 text-white">
     <%- include('partials/navbar') %>
 
     <div class="relative w-full py-8" style="
-        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('https://lionsgate.brightspotcdn.com/35/72/51b31d1045a2b4593871e545ebad/john-wick-movie-bg01-portrait.jpg');
+        background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), url('<%= movie.image_url%>');
         background-size: cover;
         background-position: start;
         background-repeat: no-repeat;
         min-height: 100vh;">
-        <div class="w-full max-w-7xl mx-auto">
+                <%- include('partials/categories.ejs')%>
+
+        <div class="w-full max-w-7xl mx-auto" id="movie-container" data-movie-id="<%= movie.id %>">
             <div class="flex justify-between items-center w-full pb-4 border-b border-gray-700 mb-6">
-                <h1 class="text-3xl font-bold text-center text-yellow-400 mb-2">John Wick</h1>
+                <h1 class="text-3xl font-bold text-center text-yellow-400 mb-2"><%= movie.title %></h1>
                 <div class="flex items-center gap-4">
-                    <p class="text-lg">2014</p>/
-                    <p class="text-lg">0h 59m</p>
+                    <p class="text-lg"><%= movie.release_year%></p>/
+                    <p class="text-lg"><% var hours=Math.floor(movie.duration / 60); var minutes=movie.duration % 60; %>
+                        <%= hours + "h " + minutes + "m" %></p>
                 </div>
             </div>
             
             <div class="flex gap-8 justify-between mb-12">
                 <div class="w-1/4 flex flex-col gap-4">
-                    <img src="https://m.media-amazon.com/images/M/MV5BMTU2NjA1ODgzMF5BMl5BanBnXkFtZTgwMTM2MTI4MjE@._V1_.jpg"
+                    <img src="<%= movie.image_url%>"
                         alt="Movie Poster" class="w-full rounded-lg shadow-xl transition-transform duration-300 hover:scale-105">
                     <div class="flex flex-col items-start gap-4 w-full">
                         <div class="w-full flex justify-between">
                             <div class="flex items-center gap-2 text-yellow-400">
                                 <i class="fa-solid fa-star text-3xl"></i>
-                                <p class="text-xl font-semibold font-serif">4.5 / 5</p>
+                                <p class="text-xl font-semibold font-serif">
+                                    <span>
+                                        <%= formattedRating %>
+                                    </span> / 5.0
+                                </p>
                             </div>
                             <div class="flex items-center gap-2 text-yellow-400">
                                 <i class="fa-solid fa-users text-lg"></i>
-                                <p class="text-xl font-semibold font-serif">1225</p>
+                                <p id="count-rating" class="text-xl font-semibold font-serif"><%= ratingCount %></p>
                             </div>
                         </div>
-                        <div class="flex space-x-1">
-                            <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="1"></i>
-                            <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="2"></i>
-                            <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="3"></i>
-                            <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="4"></i>
-                            <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="5"></i>
+                        <div class="flex w-full items-center justify-between">
+                            <div class="flex gap-2 items-center">
+                                <div id="rating-container" data-user-id="<%= user && user.user_id ? user.user_id : '' %>">
+                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="1"></i>
+                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="2"></i>
+                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="3"></i>
+                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="4"></i>
+                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="5"></i>
+                                </div>
+        <p id="my-rating">
+            <% let foundRating = false; %>
+            <% if (user) { %> <!-- تحقق من وجود user -->
+                <% ratings.forEach(function(rating) { %>
+                    <% if (rating.user_id === user.user_id) { %>
+                        <% foundRating = true; %>
+                        <p class="text-2xl" id="user-rating"><%= rating.rating %></p>
+                    <% } %>
+                <% }) %>
+            <% } %>
+
+            <% if (!foundRating) { %>
+                <p class="text-gray-500 text-2xl">لا يوجد تقييم</p>
+            <% } %>
+        </p>
+
+                            </div>
+
+                            <div>
+                                <i class="fas fa-heart text-3xl cursor-pointer transition-all duration-300 ease-in-out transform hover:text-red-600 hover:scale-110"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="w-full max-w-7xl mx-auto">
                     <div class="flex flex-col mb-6">
                         <h2 class="text-2xl font-semibold text-yellow-300 pb-4">Description</h2>
-                        <p class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                            John Wick (2014) is an action-packed thriller that follows the story of a retired hitman seeking
-                            vengeance after a group
-                            of Russian mobsters break into his house, steal his car, and kill his beloved dog — a final gift from
-                            his recently
-                            deceased wife. Played by Keanu Reeves, John Wick embarks on a relentless quest for justice, unleashing
-                            his lethal skills
-                            and confronting his dark past. With stylish action sequences, intense fight scenes, and a well-crafted
-                            world of
-                            underground crime, John Wick is a high-octane movie that blends emotional depth with brutal combat. The
-                            film is known
-                            for its unique choreography, compelling character development, and iconic gun-fu action.
+                        <p class="p-4 shadow bg-gradient-to-br from-gray-900 to-gray-500 border border-gray-700 border-l-yellow-500 border-l-2">
+                            <%= movie.description %>
                         </p>
                     </div>
-                    <h2 class="text-2xl font-semibold text-yellow-300 mb-4">John Wick
-                        Reviews</h2>
-                    <div class="flex flex-col gap-2">
-                        <div class="grid grid-cols-1 gap-6 w-full h-96 overflow-y-scroll">
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                            <div class="p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2">
-                                <p class="text-yellow-300 font-bold">A Cinematic Masterpiece!</p>
-                                <p class="text-gray-300 mt-2">An amazing movie in every way! The action is well-executed, and the
-                                    fight
-                                    scenes are incredibly thrilling. Keanu Reeves was fantastic as always, and the visual effects
-                                    were
-                                    stunning!</p>
-                                <a href="profile.html?user=JohnDoe" class="text-blue-400 hover:underline mt-2 block">Review by: John
-                                    Doe</a>
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-4 my-4">
+                    <div class="my-4 flex flex-gap-4 w-full">
+                        <div class="flex w-full flex-col gap-4 my-4">
                             <label for="comment" class="font-semibold text-xl">Add Comment</label>
-                            <div class="flex gap-4">
-                                <input type="text" name="comment" id="comment" placeholder="Add Comment....."
-                                    class="border p-2 w-1/2 rounded bg-gray-300 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                                <button
-                                    class="bg-gradient-to-t from-yellow-600 to-yellow-300 hover:from-yellow-500 hover:to-yellow-200 min-w-40 text-gray-800 font-bold rounded h-10 flex items-center justify-center">
+                            <div class="flex flex-col gap-4 w-1/2">
+                                <input type="hidden" id="userId" value="<%= user ? user.id : '' %>">
+                                <input type="hidden" id="movieId" value="<%= movie.id %>">
+                                <textarea name="comment" id="comment" placeholder="Add Comment....."
+                                    class="border p-2 w-full rounded bg-gray-200 text-gray-900 placeholder-gray-500 
+                                                            focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:bg-white shadow-md resize-none overflow-y-auto h-full min-h-16 max-h-28"
+                                    rows="1"></textarea>
+                                <button id="submitComment"
+                                    class="w-40 p-2 bg-gradient-to-t from-yellow-600 to-yellow-300 hover:from-yellow-500 hover:to-yellow-200 min-w-40 text-gray-800 font-bold rounded flex items-center justify-center">
                                     Submit
                                 </button>
                             </div>
                         </div>
-
+                    </div>
+                    <h2 class="text-2xl font-semibold text-yellow-300 mb-4 border-b-2 border-yellow-300 pb-2">
+                        "<%= movie.title %>" Reviews ( <%= commentCount %> )
+                    </h2>
+                    <div class="grid grid-cols-1 gap-6 w-full h-fit max-h-96 overflow-y-auto my-4 px-4 pr-8" id="newCommentSection"></div>
+                    <div class="flex flex-col gap-2">
+                        <div class="grid grid-cols-1 gap-6 w-full h-fit max-h-screen overflow-y-auto px-4">
+                            <% if (comments.length===0) { %>
+                            <p id="commentSectionError" class="text-gray-500 text-center mt-4 border p-4 border-gray-600">No comments yet. Be the first to comment!</p>
+                            <% } else { %>
+                                <% comments.forEach(comment=> { %>
+                                    <div class="relative p-4 shadow border border-gray-700 border-l-yellow-500 border-l-2 max-w-full break-words">
+                                        <div class="flex justify-between w-full items-center">
+                                            <a href="#" class="text-yellow-300 font-bold hover:underline">
+                                                <%= comment.user_name %>
+                                            </a>
+                                            <div>
+                                                <p class="text-gray-200 mt-2">
+                                                    <%= new Date(comment.created_at).toLocaleDateString() %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p class="text-gray-300 break-words">
+                                            <%= comment.comment %>
+                                        </p>
+                                    </div>
+                                <% }); %>
+                            <% } %>
+                        </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <%- include('partials/categories.ejs')%>
     </div>
     </div>
     <script>
-        const stars = document.querySelectorAll('.fa-star');
-        const ratingResult = document.getElementById('rating-result');
-
-        let currentRating = 0; 
-
-        stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const rating = star.getAttribute('data-rating');
-                currentRating = rating; 
-
-                stars.forEach(s => {
-                    if (s.getAttribute('data-rating') <= rating) {
-                        s.classList.add('text-yellow-500'); 
-                    } else {
-                        s.classList.remove('text-yellow-500'); 
-                    }
-                });
-
-                ratingResult.textContent = `تم تقييمك بـ ${rating} من 5 نجوم.`;
-            });
-
-            star.addEventListener('mouseenter', () => {
-                if (currentRating === 0) { 
-                    const rating = star.getAttribute('data-rating');
-                    stars.forEach(s => {
-                        if (s.getAttribute('data-rating') <= rating) {
-                            s.classList.add('text-yellow-500');
-                        } else {
-                            s.classList.remove('text-yellow-500');
-                        }
-                    });
+    const stars = document.querySelectorAll('.fa-star');
+    const ratingElement = document.getElementById('user-rating');
+    const initialRating = parseInt(ratingElement.innerText);
+    window.onload = () => {
+        updateStarColors(initialRating);
+    };
+    const updateStarColors = (rating) => {
+            stars.forEach(star => {
+                const starRating = star.getAttribute('data-rating');
+                if (starRating <= rating) {
+                    star.classList.add('text-yellow-400');
+                    star.classList.remove('text-white');
+                } else {
+                    star.classList.add('text-white');
+                    star.classList.remove('text-yellow-400');
                 }
             });
+        };
 
-            star.addEventListener('mouseleave', () => {
-                if (currentRating === 0) { 
-                    stars.forEach(s => {
-                        s.classList.remove('text-yellow-500'); 
-                    });
+    document.addEventListener('DOMContentLoaded', () => {
+        const ratingContainer = document.getElementById('rating-container');
+        const movieContainer = document.getElementById('movie-container');
+
+        if (!ratingContainer || !movieContainer) {
+            console.error("Error: Missing rating-container or movie-container in the DOM.");
+            return;
+        }
+
+        const userId = ratingContainer.getAttribute('data-user-id');
+        const movieId = movieContainer.getAttribute('data-movie-id');
+
+        if (!userId) {
+            console.warn("User is not logged in. Ratings are disabled.");
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', async (event) => {
+                if (!userId) {
+                    alert('You need to be logged in to rate this movie!');
+                    return;
+                }
+
+                const rating = event.target.getAttribute('data-rating');
+
+                try {
+                    await submitRating(userId, movieId, rating);
+                    updateStarColors(rating);
+                } catch (error) {
+                    console.error("Error submitting rating:", error);
+                    alert("Failed to submit rating. Please try again later.");
                 }
             });
         });
-    </script>
+        const submitRating = async (userId, movieId, rating) => {
+            try {
+                const response = await fetch('/add_rating', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, movie_id: movieId, rating })
+                });
 
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Failed to submit rating.");
+                }
+                
+                if(result.ratingCount){
+                    const updatedRatingCount = result.ratingCount;
+                    document.getElementById('count-rating').textContent = updatedRatingCount;
+                    document.getElementById('my-rating').innerText = 7;
+                }
+                
+
+                console.log("Rating submitted successfully:", result.message);
+            } catch (error) {
+                console.error("Error:", error);
+                alert('Error submitting rating');
+            }
+        };
+
+
+        const updateStarColors = (rating) => {
+            stars.forEach(star => {
+                const starRating = star.getAttribute('data-rating');
+                if (starRating <= rating) {
+                    star.classList.add('text-yellow-400');
+                    star.classList.remove('text-white');
+                } else {
+                    star.classList.add('text-white');
+                    star.classList.remove('text-yellow-400');
+                }
+            });
+            ratingElement.innerHTML = rating;
+        };
+
+        const loadUserRating = async () => {
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/get_rating?user_id=${userId}&movie_id=${movieId}`);
+                const result = await response.json();
+
+                if (response.ok && result.rating) {
+                    updateStarColors(result.rating);
+                }
+            } catch (error) {
+                console.error("Error loading user rating:", error);
+            }
+        };
+
+        loadUserRating();
+    });
+
+
+
+    document.getElementById('submitComment').addEventListener('click', async function () {
+            const comment = document.getElementById('comment').value.trim();
+            const userId = document.getElementById('userId').value;
+            const movieId = document.getElementById('movieId').value;
+
+            // التحقق من وجود المستخدم
+            if (!userId) {
+                alert('You need to log in to comment. Redirecting to login page.');
+                window.location.href = '/login'; // هنا ضع رابط صفحة تسجيل الدخول الخاصة بك
+                return;
+            }
+
+            // التحقق من الحقول الفارغة
+            if (!comment || !movieId) {
+                alert('Please enter all required fields.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/comments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        movieId: movieId,
+                        userId: userId,
+                        comment: comment
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Response Data:', data);
+
+                    const commentSection = document.getElementById('newCommentSection');
+                    const newComment = document.createElement('div');
+                    newComment.classList.add('relative', 'p-4', 'shadow', 'border', 'border-gray-700', 'border-l-green-600', 'border-l-4');
+
+                    newComment.innerHTML = `
+                    <div class="flex justify-between w-full items-center">
+                        <a href="#" class="text-green-500 font-bold hover:underline">
+                            My Reviews
+                        </a>
+                        <div>
+                            <p class="text-green-400 mt-2">
+                                ${new Date().toLocaleDateString()}  
+                            </p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mt-2 text-lg leading-relaxed break-words">
+                        ${data.comment.comment || comment}  <!-- تحقق من محتوى التعليق -->
+                    </p>
+                `;
+
+                    commentSection.prepend(newComment);
+                    const commentSectionError = document.getElementById('commentSectionError');
+                    if (commentSectionError) {
+                        commentSectionError.remove();
+                    }
+
+                    document.getElementById('comment').value = '';
+                } else {
+                    alert(data.error || 'Failed to add comment');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error occurred while submitting the comment');
+            }
+        });
+
+    </script>
 </body>
 </html>
