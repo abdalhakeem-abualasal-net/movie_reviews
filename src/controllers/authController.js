@@ -78,13 +78,17 @@ const loginUser = (req, res) => {
                     maxAge: 3600000
                 });
 
-                res.redirect('/');
+                if (req.session.ratingInfo) {
+                    const { movieId } = req.session.ratingInfo;
+                    res.redirect(`/movies/${movieId}`);
+                } else {
+                    res.redirect("/");
+                }
+
             });
         });
     });
 };
-
-
 
 const logoutUser = (req, res) => {
     const sessionToken = req.cookies.session_token;

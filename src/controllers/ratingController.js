@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
 const addRatingMovies = (req, res) => {
-    const { rating, user_id, movie_id } = req.body;
+    const { user_id, movie_id , rating} = req.body;
 
     if (!user_id || !movie_id || rating === undefined) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -10,7 +10,7 @@ const addRatingMovies = (req, res) => {
     if (rating < 0 || rating > 10) {
         return res.status(400).json({ error: "Rating must be between 0 and 10" });
     }
-
+    delete req.session.ratingInfo;
     const sessionQuery = `
         SELECT session_token, expires_at
         FROM sessions

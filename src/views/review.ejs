@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body class="bg-gradient-to-b from-black to-gray-950 text-white">
@@ -50,21 +52,22 @@
                                 <p id="count-rating" class="text-xl font-semibold font-serif"><%= ratingCount %></p>
                             </div>
                         </div>
-                        <div class="flex w-full items-center justify-between">
-                            <div class="flex gap-2 items-center">
-                                <div id="rating-container" data-user-id="<%= user && user.user_id ? user.user_id : '' %>">
-                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="1"></i>
-                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="2"></i>
-                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="3"></i>
-                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="4"></i>
-                                    <i class="fa-solid fa-star text-2xl cursor-pointer" data-rating="5"></i>
+                        <div class="flex w-full items-start justify-between">
+                            <div class="flex flex-col gap-2 items-center">
+                                <div id="rating-container" class="flex items-center gap-2" data-user-id="<%= user && user.user_id ? user.user_id : '' %>">
+                                    <i class="fa-solid fa-star text-[20px] cursor-pointer" data-rating="1"></i>
+                                    <i class="fa-solid fa-star text-[24px] cursor-pointer" data-rating="2"></i>
+                                    <i class="fa-solid fa-star text-[26px] cursor-pointer" data-rating="3"></i>
+                                    <i class="fa-solid fa-star text-[28px] cursor-pointer" data-rating="4"></i>
+                                    <i class="fa-solid fa-star text-[32px] cursor-pointer" data-rating="5"></i>
                                 </div>
-                                <div id="my-rating">
+
+                                <div id="my-rating" class="text-2xl">
                                     <% if (user) { %> 
                                         <% let userRated = false; %>
                                         <% ratings.forEach(function(rating) { %>
                                             <% if (rating.user_id === user.user_id) { %>
-                                                <p class="text-2xl" id="user-rating">
+                                                <p id="user-rating">
                                                     <%= rating.rating %>
                                                 </p>
                                                 <% userRated = true; %>
@@ -72,7 +75,7 @@
                                         <% }); %>
 
                                         <% if (!userRated) { %>
-                                            <p class="text-2xl" id="user-rating">0</p>
+                                            <p id="user-rating">0</p>
                                         <% } %>
                                     <% } else { %>
                                         <p class="text-2xl" id="user-rating">0</p>
@@ -97,7 +100,7 @@
                         <div class="flex w-full flex-col gap-4 my-4">
                             <label for="comment" class="font-semibold text-xl">Add Comment</label>
                             <div class="flex flex-col gap-4 w-1/2">
-                                <input type="hidden" id="userId" value="<%= user ? user.id : '' %>">
+                                <input type="hidden" id="userId" value="<%= user && user.user_id || 'null' %>">
                                 <input type="hidden" id="movieId" value="<%= movie.id %>">
                                 <textarea name="comment" id="comment" placeholder="Add Comment....."
                                     class="border p-2 w-full rounded bg-gray-200 text-gray-900 placeholder-gray-500 
@@ -145,65 +148,100 @@
         </div>
     </div>
     </div>
+
     <script>
-    const stars = document.querySelectorAll('.fa-star');
-    const ratingElement = document.getElementById('user-rating');
-    const initialRating = parseInt(ratingElement.innerText);
-    window.onload = () => {
-        updateStarColors(initialRating);
-    };
-    const updateStarColors = (rating) => {
-            stars.forEach(star => {
-                const starRating = star.getAttribute('data-rating');
-                if (starRating <= rating) {
-                    star.classList.add('text-yellow-400');
-                    star.classList.remove('text-white');
-                } else {
-                    star.classList.add('text-white');
-                    star.classList.remove('text-yellow-400');
-                }
-            });
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const stars = document.querySelectorAll('#rating-container i');
+            let userRating = parseInt(document.getElementById('user-rating').innerText);
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const ratingContainer = document.getElementById('rating-container');
-        const movieContainer = document.getElementById('movie-container');
-
-        if (!ratingContainer || !movieContainer) {
-            console.error("Error: Missing rating-container or movie-container in the DOM.");
-            return;
-        }
-
-        const userId = ratingContainer.getAttribute('data-user-id');
-        const movieId = movieContainer.getAttribute('data-movie-id');
-
-        if (!userId) {
-            console.warn("User is not logged in. Ratings are disabled.");
-        }
-
-        stars.forEach(star => {
-            star.addEventListener('click', async (event) => {
-                if (!userId) {
-                    if (confirm('You need to be logged in to rate this movie! Do you want to log in now?')) {
-                        window.location.href = '/login';
+            function colorStars(rating) {
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.add('text-yellow-500'); 
+                        star.classList.remove('text-white'); 
+                    } else {
+                        star.classList.remove('text-yellow-500');
+                        star.classList.add('text-white');
                     }
-                    return;
+                });
+            }
+
+            function updateRatingDisplay(rating) {
+                document.getElementById('user-rating').innerText = rating;
+            }
+
+            stars.forEach((star, index) => {
+                star.addEventListener('mouseover', () => {
+                    colorStars(index + 1);
+                    updateRatingDisplay(index + 1); 
+                });
+
+                star.addEventListener('mouseout', () => {
+                    colorStars(userRating);
+                    updateRatingDisplay(userRating); 
+                });
+
+                star.addEventListener('click', () => {
+                    userRating = index + 1; 
+                    colorStars(userRating); 
+                    updateRatingDisplay(userRating);
+                });
+            });
+
+            colorStars(userRating);
+            updateRatingDisplay(userRating);
+        });
+    </script>
+
+    
+    <script>
+        const stars = document.querySelectorAll('.fa-star');
+        const ratingElement = document.getElementById('user-rating');
+        const initialRating = parseInt(ratingElement.innerText);
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/get-pending-rating');
+                const data = await response.json();
+                
+                if (data.movieId && data.rating) {
+                    console.log(`Pending Rating Found - Movie ID: ${data.movieId}, Rating: ${data.rating}`);
+                    
+                    const ratingContainer = document.getElementById('rating-container');
+                    if (!ratingContainer) {
+                        console.error("Error: Missing rating-container in the DOM.");
+                        return;
+                    }
+                    const userId = ratingContainer.getAttribute('data-user-id');
+                    
+                    if (userId) {
+                        await submitRating(userId, data.movieId, data.rating);
+                        colorStars(data.rating);
+                        alert(data.movieId)
+                    } else {
+                        console.warn("User is not logged in. Rating is saved but not submitted.");
+                    }
+                } else {
+                    console.log('No pending rating found.');
                 }
+            } catch (error) {
+                console.error('Error fetching pending rating:', error);
+            }
+        });
 
-
-
-                const rating = event.target.getAttribute('data-rating');
-
-                try {
-                    await submitRating(userId, movieId, rating);
-                    updateStarColors(rating);
-                } catch (error) {
-                    console.error("Error submitting rating:", error);
-                    alert("Failed to submit rating. Please try again later.");
+    
+        function colorStars(rating) {
+            stars.forEach((star, index) => {
+                if (index <= rating) {
+                    star.classList.add('text-yellow-500'); 
+                    star.classList.remove('text-white'); 
+                } else {
+                    star.classList.remove('text-yellow-500');
+                    star.classList.add('text-white');
                 }
             });
-        });
-        const submitRating = async (userId, movieId, rating) => {
+        }
+
+        async function submitRating(userId, movieId, rating) {
             try {
                 const response = await fetch('/add_rating', {
                     method: 'POST',
@@ -216,13 +254,10 @@
                 if (!response.ok) {
                     throw new Error(result.error || "Failed to submit rating.");
                 }
-                
-                if(result.ratingCount) {
-                    const updatedAvgRating = result.avgRating;
-                    const updatedRatingCount = result.ratingCount;
-                    document.getElementById('count-rating').textContent = updatedRatingCount;
+
+                if (result.ratingCount) {
+                    document.getElementById('count-rating').textContent = result.ratingCount;
                     document.getElementById('my-rating').innerText = rating;
-                    document.getElementById('avg-rating').textContent = updatedAvgRating;
                 }
 
                 console.log("Rating submitted successfully:", result.message);
@@ -230,116 +265,93 @@
                 console.error("Error:", error);
                 alert('Error submitting rating');
             }
-        };
+        }
 
-
-
-        const updateStarColors = (rating) => {
-            stars.forEach(star => {
-                const starRating = star.getAttribute('data-rating');
-                if (starRating <= rating) {
-                    star.classList.add('text-yellow-400');
-                    star.classList.remove('text-white');
-                } else {
-                    star.classList.add('text-white');
-                    star.classList.remove('text-yellow-400');
-                }
-            });
-            ratingElement.innerHTML = rating;
-        };
-
-        const loadUserRating = async () => {
-            if (!userId) return;
-
-            try {
-                const response = await fetch(`/get_rating?user_id=${userId}&movie_id=${movieId}`);
-                const result = await response.json();
-
-                if (response.ok && result.rating) {
-                    updateStarColors(result.rating);
-                }
-            } catch (error) {
-                console.error("Error loading user rating:", error);
-            }
-        };
-
-        loadUserRating();
-    });
-
-
-
-    document.getElementById('submitComment').addEventListener('click', async function () {
-            const comment = document.getElementById('comment').value.trim();
-            const userId = document.getElementById('userId').value;
-            const movieId = document.getElementById('movieId').value;
-
-            // التحقق من وجود المستخدم
-            if (!userId) {
-                alert('You need to log in to comment. Redirecting to login page.');
-                window.location.href = '/login'; // هنا ضع رابط صفحة تسجيل الدخول الخاصة بك
-                return;
-            }
-
-            // التحقق من الحقول الفارغة
-            if (!comment || !movieId) {
-                alert('Please enter all required fields.');
+        async function saveRatingBeforeLogin(movieId, rating) {
+            if (!movieId || !rating) {
+                console.error("Movie ID or rating is missing.");
                 return;
             }
 
             try {
-                const response = await fetch('http://localhost:3000/comments', {
+                const response = await fetch('/save-rating', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        movieId: movieId,
-                        userId: userId,
-                        comment: comment
-                    }),
+                    body: JSON.stringify({ movieId, rating })
                 });
 
-                const data = await response.json();
-
                 if (response.ok) {
-                    console.log('Response Data:', data);
-
-                    const commentSection = document.getElementById('newCommentSection');
-                    const newComment = document.createElement('div');
-                    newComment.classList.add('relative', 'p-4', 'shadow', 'border', 'border-gray-700', 'border-l-green-600', 'border-l-4');
-
-                    newComment.innerHTML = `
-                    <div class="flex justify-between w-full items-center">
-                        <a href="#" class="text-green-500 font-bold hover:underline">
-                            My Reviews
-                        </a>
-                        <div>
-                            <p class="text-green-400 mt-2">
-                                ${new Date().toLocaleDateString()}  
-                            </p>
-                        </div>
-                    </div>
-                    <p class="text-gray-300 mt-2 text-lg leading-relaxed break-words">
-                        ${data.comment.comment || comment}  <!-- تحقق من محتوى التعليق -->
-                    </p>
-                `;
-
-                    commentSection.prepend(newComment);
-                    const commentSectionError = document.getElementById('commentSectionError');
-                    if (commentSectionError) {
-                        commentSectionError.remove();
-                    }
-
-                    document.getElementById('comment').value = '';
+                    const data = await response.json();
+                    console.log('Rating saved successfully:', data);
+                    window.location.href = '/login';
                 } else {
-                    alert(data.error || 'Failed to add comment');
+                    const errorData = await response.json();
+                    console.error('Error saving rating:', errorData.message);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error occurred while submitting the comment');
+                console.error('Error during fetch:', error);
             }
-        });
+        }
 
+        document.addEventListener('DOMContentLoaded', () => {
+            const ratingContainer = document.getElementById('rating-container');
+            const movieContainer = document.getElementById('movie-container');
+
+            if (!ratingContainer || !movieContainer) {
+                console.error("Error: Missing rating-container or movie-container in the DOM.");
+                return;
+            }
+
+            const userId = ratingContainer.getAttribute('data-user-id');
+            const movieId = movieContainer.getAttribute('data-movie-id');
+
+            stars.forEach(star => {
+                star.addEventListener('click', async (event) => {
+                    const rating = event.target.getAttribute('data-rating');
+                    if (!userId) {
+                        Swal.fire({
+                            title: 'Login Required!',
+                            text: 'You must be logged in to rate this movie.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Go to Login',
+                            cancelButtonText: 'Cancel',
+                            background: '#f2f2f2',
+                            color: '#000',
+                            customClass: {
+                                popup: 'shadow-2xl rounded-xl p-6 border border-gray-800',
+                                title: 'text-2xl font-bold text-gray-800',
+                                htmlContainer: 'text-gray-800 text-lg',
+                                icon: 'text-yellow-500',
+                                confirmButton: 'bg-yellow-500 transition-all text-white font-semibold py-2 px-5 rounded-lg shadow-lg',
+                                cancelButton: 'bg-red-600 hover:bg-red-700 transition-all text-white font-semibold py-2 px-5 rounded-lg shadow-md'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                saveRatingBeforeLogin(movieId, rating);
+                            } else {
+                                const stars = document.querySelectorAll('.fa-star');
+                                stars.forEach(star => {
+                                    star.classList.remove('text-yellow-500');
+                                    star.classList.add('text-gray-200');
+                                });
+                                ratingElement.innerText = "0";
+                            }
+                        });
+                    }else{
+                        try {
+                            await submitRating(userId, movieId, rating);
+                        } catch (error) {
+                            console.error("Error submitting rating:", error);
+                            alert("Failed to submit rating. Please try again later.");
+                        }
+                    }
+                });
+            });
+        });
+    
     </script>
 </body>
 </html>
