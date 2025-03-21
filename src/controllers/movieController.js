@@ -3,14 +3,22 @@ const db = require('../config/db');
 const getMovieById = (req, res) => {
     const movieId = req.params.id;
     const sessionToken = req.cookies.session_token;
+    const userId = req.user?.id || null; 
 
-    const movieQuery = `SELECT * FROM movies WHERE id = ?`;
+    const movieQuery = `
+    SELECT * FROM movies WHERE id = ?`
+        ;
     const ratingsQuery = `SELECT * FROM ratings WHERE movie_id = ?`;
     const commentsQuery = `
         SELECT comments.*, users.name AS user_name
         FROM comments
         JOIN users ON comments.user_id = users.id
         WHERE comments.movie_id = ?;
+    `;
+    const favoriteQuery = `
+        SELECT COUNT(*) AS isFavorite
+        FROM favorites
+        WHERE user_id = ? AND movie_id = ?;
     `;
 
     db.query(movieQuery, [movieId], (err, movieResults) => {
@@ -45,15 +53,40 @@ const getMovieById = (req, res) => {
 
                 const commentCount = commentsResults.length;
 
-                res.render("review" ,{
-                    movie,
-                    ratings: ratingsResults,
-                    comments: commentsResults,
-                    formattedRating,
-                    ratingCount,
-                    commentCount,
-                    sessionToken
-                });
+                if (userId) {
+                    // استعلام المفضلة فقط إذا كان المستخدم مسجلاً
+                    db.query(favoriteQuery, [userId, movieId], (err, favoriteResults) => {
+                        if (err) {
+                            console.error("Error fetching favorite status:", err);
+                            return res.status(500).send("Error fetching favorite data");
+                        }
+
+                        const isFavorite = favoriteResults[0].isFavorite > 0; // إرجاع true أو false
+
+                        res.render("review", {
+                            movie,
+                            ratings: ratingsResults,
+                            comments: commentsResults,
+                            formattedRating,
+                            ratingCount,
+                            commentCount,
+                            isFavorite,
+                            sessionToken
+                        });
+                    });
+                } else {
+                    // إذا لم يكن هناك مستخدم مسجل، نعيد isFavorite = false
+                    res.render("review", {
+                        movie,
+                        ratings: ratingsResults,
+                        comments: commentsResults,
+                        formattedRating,
+                        ratingCount,
+                        commentCount,
+                        isFavorite: false,
+                        sessionToken
+                    });
+                }
             });
         });
     });

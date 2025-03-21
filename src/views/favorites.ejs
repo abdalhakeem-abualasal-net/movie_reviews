@@ -1,29 +1,132 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login</title>
     <link rel="preconnect" href="https://fonts.bunny.net" />
     <link
-      href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600"
-      rel="stylesheet"
-    />
+        href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600"
+        rel="stylesheet"
+        />
     <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+        rel="stylesheet"
     />
         <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-  </head>
+</head>
 
-  <body class="relative">
+<body class="relative bg-black">
     <%- include('partials/navbar') %>
-    <div class="relative w-full bg-black">
-      <%- include('partials/categories.ejs')%>
+    <div class="relative">
+        <%- include('partials/categories.ejs')%>
+<div
+id="movies-container"
+class="relative w-full max-w-7xl mx-auto py-10 text-white border-b-2 border-gray-700"
+>
+<p class="text-2xl text-yellow-500 font-bold">Top Movies</p>
+<div class="text-white flex items-center gap-2 text-lg my-2">
+    <p class="border-l-2 border-yellow-500 px-4 font-bold">Top 10 Movies</p>
+    <i class="fas fa-chevron-right hover:text-yellow-500"></i>
+</div>
+<div
+    id="movies-list"
+    class="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+>
+    <% movies.forEach(movie => { %>
+    <div
+    class="relative flex flex-col items-center bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-fit"
+    >
+    <img
+        src="<%= movie.image_url %>"
+        alt="<%= movie.title %>"
+        class="w-[95%] h-72 object-cover object-center"
+    />
+    <div class="relative flex flex-col w-full p-2 gap-1 justify-between h-fit">
+        <div class="absolute top-2 right-2">
+            <i id="favorite-icon-<%= movie.id %>" 
+            data-user-id="<%= user.user_id %>" 
+            data-movie-id="<%= movie.id %>" 
+            onclick="toggleFavorite('<%= user.user_id %>', '<%= movie.id %>')" 
+            class="fas fa-heart text-2xl cursor-pointer 
+                    <% if (movie.is_favorites == 1) { %>
+                        text-yellow-400 hover:text-white
+                    <% } else { %>
+                        text-white hover:text-yellow-400
+                    <% } %>">
+            </i>
+        </div>
 
+
+        <div class="h-12 mr-7">
+        <p class="text-base font-semibold text-white"><%= movie.title %></p>
+        </div>
+        <div class="flex flex-col w-full justify-between">
+        <div class="flex w-full gap-2 justify-between text-yellow-500">
+            <div class="flex items-center">
+            <i class="fas fa-star"></i>
+            <div class="ml-2 font-bold text-lg">
+                <p><%= (movie.rating || 0).toFixed(1) %> / 5.0</p>
+            </div>
+            </div>
+            <div class="flex items-center">
+            <i class="fas fa-users"></i>
+            <div class="ml-2 font-bold text-lg">
+                <p><%= movie.reviews_count %></p>
+            </div>
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm">
+            Reviews:
+            <span class="font-semibold text-white">
+            <%= movie.comments_count %>
+            </span>
+        </p>
+        </div>
+
+        <a
+        href="/movies/<%- movie.id%>"
+        class="flex items-center justify-between w-full text-sm border rounded border-gray-700 hover:bg-gray-700 p-2"
+        >
+        <p>More Info</p>
+        <i class="fas fa-chevron-right"></i>
+        </a>
     </div>
-  </body>
+    </div>
+    <% }) %>
+</div>
+</div>
+    </div>
+    
+    <script>
+        function toggleFavorite(userId, movieId) {
+            fetch('/favorites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId, movieId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = document.querySelector(`[data-user-id='${userId}'][data-movie-id='${movieId}']`);
+
+                if (data.message === 'Movie successfully added to favorites.') {
+                    icon.classList.add('text-yellow-400');
+                    icon.classList.remove('text-white');
+                } else if (data.message === 'Movie successfully removed from favorites.') {
+                    icon.classList.add('text-white');
+                    icon.classList.remove('text-yellow-400');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error occurred while updating favorite');
+            });
+        }
+    </script>
+</body>
 </html>

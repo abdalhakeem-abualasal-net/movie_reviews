@@ -1,6 +1,7 @@
 require('dotenv').config();
 const session = require("express-session");
 const express = require("express");
+const csrf = require('csurf');
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/authRoutes"); 
 const movieRoutes = require("./routes/movieRoutes");
@@ -19,16 +20,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); 
 app.use(sessionMiddleware);
 
+app.use(cookieParser());
 app.use(session({
-    secret: "jL@9!f#4s5%T6&bN$wQmXz",
+    secret: 'jL@9!f#4s5%T6&bN$334#4##@333$$5JF9SF98T4TT7#&$u&$$gh$r&$@YY$$GYF$&$U$^T%#FD#FDYGD&$F*$*$IF$IFwQmXz',
     resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: false,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 30 
+    saveUninitialized: false,
+    cookie: { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: 3600000
     }
 }));
+const csrfProtection = csrf({ cookie: true });
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -41,10 +44,9 @@ app.get("/review", (req, res) => {
     res.render("review");  
 });
 
-app.get("/login", (req, res) => {
-    res.render("login");  
+app.get("/login", csrfProtection, (req, res) => {
+    res.render("login", { csrfToken: req.csrfToken() });  
 });
-
 
 
 app.get("/register", (req, res) => {
@@ -54,8 +56,6 @@ app.get("/register", (req, res) => {
 app.get("/favorites", (req, res) => {
     res.render("favorites");
 });
-
-
 
 app.post("/save-rating", (req, res) => {
     const { movieId, rating } = req.body;

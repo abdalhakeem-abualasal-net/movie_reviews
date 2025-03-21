@@ -216,7 +216,6 @@
                     if (userId) {
                         await submitRating(userId, data.movieId, data.rating);
                         colorStars(data.rating);
-                        alert(data.movieId)
                     } else {
                         console.warn("User is not logged in. Rating is saved but not submitted.");
                     }

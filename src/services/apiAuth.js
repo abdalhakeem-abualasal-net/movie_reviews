@@ -61,6 +61,7 @@ const loginUser = (req, res) => {
             const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
                 expiresIn: '30d',
             });
+            const exSession = req.session.userInfo = { userId: user.id}; 
 
             res.status(200).json({
                 user: {
@@ -69,6 +70,7 @@ const loginUser = (req, res) => {
                     email: user.email,
                 },
                 token,
+                exSession,
             });
         });
     });

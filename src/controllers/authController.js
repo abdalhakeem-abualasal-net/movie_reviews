@@ -77,6 +77,7 @@ const loginUser = (req, res) => {
                     secure: process.env.NODE_ENV === 'production',
                     maxAge: 3600000
                 });
+                req.session.userId = user.id;
 
                 if (req.session.ratingInfo) {
                     const { movieId } = req.session.ratingInfo;
